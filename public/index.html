@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Alunos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        button {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Requisições para Registro de Alunos</h1>
+
+    <form id="formAluno">
+        <input type="text" id="matricula" placeholder="Matrícula" required>
+        <input type="text" id="nome" placeholder="Nome" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="date" id="dataNascimento" placeholder="Data de Nascimento" required>
+        <button type="submit">Registrar Aluno</button>
+    </form>
+
+    <button onclick="getAlunos()">Listar Alunos (GET)</button>
+    <button onclick="atualizarAluno()">Atualizar Aluno (PUT)</button>
+    <button onclick="deletarAluno()">Remover Aluno (DELETE)</button>
+
+    <div id="response"></div>
+
+    <script>
+
+const responseDiv = document.getElementById('response');
+
+        document.getElementById('formAluno').onsubmit = function(event) {
+            event.preventDefault();
+            registrarAluno();
+        };
+
+        function getAlunos() {
+            fetch('http://localhost:3000/alunos')
+                .then(response => response.json())
+                .then( data => {
+                  
+                    renderAlunos(data)
+                   
+                })
+                .catch(error => console.error('Erro:', error));
+        }
+
+        function registrarAluno() {
+            const matricula = document.getElementById('matricula').value;
+            const nome = document.getElementById('nome').value;
+            const email = document.getElementById('email').value;
+            const dataNascimento = document.getElementById('dataNascimento').value;
+
+            fetch('http://localhost:3000/alunos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ matricula, nome, email, dataNascimento })
+            })
+            .then(response => response.json())
+            .then(data => renderAlunos([data]))
+            .catch(error => console.error('Erro:', error));
+        }
+
+        function atualizarAluno() {
+            const matricula = prompt('Digite a matrícula do aluno a ser atualizado:');
+            const nome = prompt('Novo Nome:');
+            const email = prompt('Novo Email:');
+            const dataNascimento = prompt('Nova Data de Nascimento:');
+
+            fetch(`http://localhost:3000/alunos/${matricula}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ matricula, nome, email, dataNascimento })
+            })
+            .then(response => response.json())
+            .then(data => renderAlunos([data]))
+            .catch(error => console.error('Erro:', error));
+        }
+
+        function deletarAluno() {
+            const matricula = prompt('Digite a matrícula do aluno a ser removido:');
+
+            fetch(`http://localhost:3000/alunos/${matricula}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('response').innerText = 'Aluno removido com sucesso!';
+                } else {
+                    return response.json().then(data => {
+                        document.getElementById('response').innerText = data.mensagem;
+                    });
+                }
+            })
+            .catch(error => console.error('Erro:', error));
+        }
+
+        function renderAlunos(alunos) {
+            
+            responseDiv.innerHTML = '';
+            alunos.forEach(aluno => {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.innerHTML = `
+                        <div style="margin-bottom: 10px;">
+                        <strong>Matrícula:</strong> ${aluno.matricula}<br>
+                        <strong>Nome:</strong> ${aluno.nome}<br>
+                        <strong>Email:</strong> ${aluno.email}<br>
+                        <strong>Data de Nascimento:</strong> ${aluno.dataNascimento}
+                    </div>
+                        `;
+                        responseDiv.appendChild(card);
+                    });
+        }
+    </script>
+</body>
+</html>
